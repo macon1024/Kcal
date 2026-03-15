@@ -17,6 +17,14 @@ console.log('------------------------------------------------');
 // Configure Nodemailer (Using a mock ethereal email for testing, or replace with real SMTP)
 // To test this easily, we will print the verification link in the console as well.
 const transporter = nodemailer.createTransport({
+  service: 'SendGrid',
+  auth: {
+    user: 'apikey', // This is always 'apikey' for SendGrid
+    pass: process.env.SENDGRID_API_KEY
+  }
+});
+/*
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   host: 'smtp.gmail.com',
   port: 465,
@@ -34,6 +42,7 @@ const transporter = nodemailer.createTransport({
   debug: true,              // Enable debug output
   logger: true              // Log information to console
 });
+*/
 
 // REGISTER
 router.post('/register', async (req, res) => {

@@ -13,7 +13,7 @@ try {
 dotenv.config();
 
 console.log('##############################################');
-console.log('###   KCAL BACKEND VERSION: 1.0.13-HASH-ROUTER-FIX ###');
+console.log('###   KCAL BACKEND VERSION: 1.0.14-SENDGRID-SUPPORT ###');
 console.log('###   DEPLOYMENT TIMESTAMP: ' + new Date().toISOString() + ' ###');
 console.log('##############################################');
 

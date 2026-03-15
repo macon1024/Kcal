@@ -18,10 +18,15 @@ console.log('------------------------------------------------');
 // To test this easily, we will print the verification link in the console as well.
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER, // e.g. your-email@gmail.com
     pass: process.env.EMAIL_PASS  // your generated app password
   },
+  // Force IPv4 to avoid ENETUNREACH errors on some networks (like Render)
+  family: 4,
   // Add timeouts to prevent hanging
   connectionTimeout: 10000, // 10 seconds
   greetingTimeout: 10000,   // 10 seconds

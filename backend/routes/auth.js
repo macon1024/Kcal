@@ -69,7 +69,9 @@ router.post('/register', async (req, res) => {
     });
 
     // Send verification email
-    const verificationLink = `${FRONTEND_URL}/verify/${verificationToken}`;
+    // Ensure no double slashes in the URL
+    const cleanFrontendUrl = FRONTEND_URL.replace(/\/$/, '');
+    const verificationLink = `${cleanFrontendUrl}/verify/${verificationToken}`;
     console.log(`\n\n======================================`);
     console.log(`VERIFICATION LINK FOR ${email}:`);
     console.log(verificationLink);
@@ -138,7 +140,9 @@ router.post('/resend-verification', async (req, res) => {
       { $set: { verificationToken } }
     );
 
-    const verificationLink = `${FRONTEND_URL}/verify/${verificationToken}`;
+    // Ensure no double slashes in the URL
+    const cleanFrontendUrl = FRONTEND_URL.replace(/\/$/, '');
+    const verificationLink = `${cleanFrontendUrl}/verify/${verificationToken}`;
     console.log(`\n\n=== RESEND VERIFICATION ===`);
     console.log(`LINK FOR ${email}: ${verificationLink}`);
     console.log(`Current FRONTEND_URL is: ${FRONTEND_URL}`);

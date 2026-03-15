@@ -13,7 +13,7 @@ try {
 dotenv.config();
 
 console.log('##############################################');
-console.log('###   KCAL BACKEND VERSION: 1.0.11-EMERGENCY-LINK ###');
+console.log('###   KCAL BACKEND VERSION: 1.0.12-FIX-DOUBLE-SLASH ###');
 console.log('###   DEPLOYMENT TIMESTAMP: ' + new Date().toISOString() + ' ###');
 console.log('##############################################');
 

@@ -1,11 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const dns = require('dns');
+
+// Force IPv4 resolution to avoid ENETUNREACH on Render
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch (e) {
+  console.log('Node version does not support dns.setDefaultResultOrder, skipping...');
+}
 
 dotenv.config();
 
 console.log('##############################################');
-console.log('###   KCAL BACKEND VERSION: 1.0.9-FORCE-IPV4 ###');
+console.log('###   KCAL BACKEND VERSION: 1.0.10-FORCE-DNS-V4 ###');
 console.log('###   DEPLOYMENT TIMESTAMP: ' + new Date().toISOString() + ' ###');
 console.log('##############################################');
 

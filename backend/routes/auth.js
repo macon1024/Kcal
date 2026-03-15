@@ -19,11 +19,14 @@ console.log('------------------------------------------------');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // Use STARTTLS
   auth: {
     user: process.env.EMAIL_USER, // e.g. your-email@gmail.com
     pass: process.env.EMAIL_PASS  // your generated app password
+  },
+  tls: {
+    rejectUnauthorized: false
   },
   // Force IPv4 to avoid ENETUNREACH errors on some networks (like Render)
   family: 4,

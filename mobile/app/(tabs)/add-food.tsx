@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Button, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import axios from 'axios';
 
 import { API_URL } from '@/constants/api';
@@ -11,6 +12,11 @@ export default function AddFoodScreen() {
   const [quantity, setQuantity] = useState('1');
   const [mealType, setMealType] = useState('breakfast');
   
+  // Camera State
+  const [permission, requestPermission] = useCameraPermissions();
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanned, setScanned] = useState(false);
+
   // New Food Form State
   const [newFoodName, setNewFoodName] = useState('');
   const [newFoodCalories, setNewFoodCalories] = useState('');
@@ -38,6 +44,52 @@ export default function AddFoodScreen() {
   useEffect(() => {
     fetchFoods();
   }, []);
+
+  const handleBarCodeScanned = async ({ type, data }: { type: string, data: string }) => {
+    setScanned(true);
+    setShowScanner(false);
+    setLoadingAutoFill(true);
+    Alert.alert('Scanned!', `Barcode: ${data}`);
+
+    try {
+      const res = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
+      if (res.data.status === 1) {
+        const product = res.data.product;
+        setNewFoodName(product.product_name || '');
+        setNewFoodCalories(String(Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0)));
+        setNewFoodProtein(String(Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0)));
+        setNewFoodCarbs(String(Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0)));
+        setNewFoodFat(String(Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0)));
+        setNewFoodServingSize(product.serving_size || '100g');
+        setNewFoodBaseAmount('100');
+        setNewFoodBaseUnit('g');
+        Alert.alert('Success', 'Product found!');
+      } else {
+        Alert.alert('Not Found', 'Product not found in database.');
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Error', 'Failed to fetch product data.');
+    } finally {
+      setLoadingAutoFill(false);
+    }
+  };
+
+  const openScanner = async () => {
+    if (!permission) {
+        // Permissions are still loading
+        return;
+    }
+    if (!permission.granted) {
+      const { granted } = await requestPermission();
+      if (!granted) {
+        Alert.alert('Permission needed', 'Camera permission is required to scan barcodes.');
+        return;
+      }
+    }
+    setScanned(false);
+    setShowScanner(true);
+  };
 
   const handleAutoFill = async () => {
     if (!newFoodName) {
@@ -169,10 +221,31 @@ export default function AddFoodScreen() {
 
       <View style={styles.section}>
         <Text style={styles.subtitle}>Create New Food</Text>
+        
+        {/* Scanner Modal */}
+        <Modal visible={showScanner} animationType="slide">
+          <View style={styles.scannerContainer}>
+            <CameraView 
+              style={StyleSheet.absoluteFillObject}
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e"],
+              }}
+            />
+            <View style={styles.scannerOverlay}>
+              <Text style={styles.scannerText}>Scan a food barcode</Text>
+              <Button title="Cancel" onPress={() => setShowScanner(false)} color="red" />
+            </View>
+          </View>
+        </Modal>
+
         <View style={styles.searchRow}>
           <TextInput style={[styles.input, styles.searchInput]} placeholder="Name" value={newFoodName} onChangeText={setNewFoodName} />
-          <TouchableOpacity style={styles.searchButton} onPress={handleAutoFill} disabled={loadingAutoFill}>
+          <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666'}]} onPress={openScanner}>
+            <Text style={styles.searchButtonText}>Scan</Text>
           </TouchableOpacity>
         </View>
         <TextInput style={styles.input} placeholder="Calories" value={newFoodCalories} onChangeText={setNewFoodCalories} keyboardType="numeric" />
@@ -287,5 +360,26 @@ const styles = StyleSheet.create({
   searchButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  scannerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  scannerOverlay: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  scannerText: {
+    color: 'white',
+    fontSize: 18,
+    marginBottom: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 5,
   },
 });

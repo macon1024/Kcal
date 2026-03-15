@@ -39,6 +39,7 @@ const Login = () => {
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend verification email.');
       setMessage('');
+      console.error('Resend verification error:', err);
     }
   };
 

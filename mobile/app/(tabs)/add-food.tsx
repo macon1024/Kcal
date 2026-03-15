@@ -144,17 +144,10 @@ export default function AddFoodScreen() {
         await Linking.openURL(lensIntent);
       } else {
         // Fallback to Google App search or web
-        const googleAppUrl = 'googleapp://';
-        const canOpenGoogle = await Linking.canOpenURL(googleAppUrl);
-        if (canOpenGoogle) {
-          await Linking.openURL(googleAppUrl);
-        } else {
-          await Linking.openURL('https://lens.google.com/');
-        }
+        await Linking.openURL('https://lens.google.com/');
       }
     } catch (err) {
       console.error('Error opening Google Lens:', err);
-      // Final fallback to web
       Linking.openURL('https://lens.google.com/');
     }
   };
@@ -166,58 +159,12 @@ export default function AddFoodScreen() {
     if (!permission.granted) {
       const { granted } = await requestPermission();
       if (!granted) {
-        Alert.alert('Permission needed', 'Camera permission is required for AI scanner.');
+        Alert.alert('Permission needed', 'Camera permission is required for Google Lens.');
         return;
       }
     }
     setScanned(false);
     setShowScanner(true);
-  };
-
-  const openAISearch = async () => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        quality: 0.5, // Reduced quality for faster processing
-        base64: true, // Required for AI processing
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setLoadingAutoFill(true);
-        const imageBase64 = result.assets[0].base64;
-
-        if (!imageBase64) {
-          throw new Error('No image data found');
-        }
-
-        // Call our new backend AI endpoint
-        const res = await axios.post(`${API_URL}/ai/analyze-food`, {
-          imageBase64: imageBase64
-        });
-
-        if (res.data) {
-          const product = res.data;
-          setNewFoodName(product.name || '');
-          setNewFoodCalories(String(product.calories || '0'));
-          setNewFoodProtein(String(product.protein || '0'));
-          setNewFoodCarbs(String(product.carbs || '0'));
-          setNewFoodFat(String(product.fat || '0'));
-          setNewFoodServingSize(product.servingSize || '100g');
-          setNewFoodBaseAmount(String(product.baseAmount || '100'));
-          setNewFoodBaseUnit(product.baseUnit || 'g');
-          Alert.alert('AI Success', `Identified as: ${product.name}`);
-        } else {
-          Alert.alert('AI Error', 'Failed to identify food. Please try again with a clearer photo.');
-        }
-      }
-    } catch (err: any) {
-      console.log('AI Search Error:', err);
-      const errorMessage = err.response?.data?.error || 'Failed to process image with AI.';
-      Alert.alert('AI Error', errorMessage);
-    } finally {
-      setLoadingAutoFill(false);
-    }
   };
 
   const openOCRScanner = async () => {
@@ -426,15 +373,28 @@ export default function AddFoodScreen() {
               }}
             />
             <View style={styles.scannerOverlay}>
-              <Text style={styles.scannerText}>Point at food and capture for AI Scan</Text>
+              <Text style={styles.scannerText}>Google Lens Search</Text>
               
               <View style={styles.captureButtonRow}>
-                <TouchableOpacity style={[styles.captureButton, { borderColor: '#28a745' }]} onPress={handleCapture} disabled={loadingAutoFill}>
-                  {loadingAutoFill ? <ActivityIndicator color="#28a745" /> : <View style={[styles.captureInner, { backgroundColor: '#28a745' }]} />}
+                <TouchableOpacity style={[styles.captureButton, { borderColor: '#4285F4' }]} onPress={handleCapture} disabled={loadingAutoFill}>
+                  {loadingAutoFill ? <ActivityIndicator color="#4285F4" /> : <View style={[styles.captureInner, { backgroundColor: '#4285F4' }]} />}
                 </TouchableOpacity>
               </View>
 
-              <Button title="Cancel" onPress={() => setShowScanner(false)} color="red" />
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 20 }}>
+                <TouchableOpacity 
+                  style={{ backgroundColor: '#fff', padding: 10, borderRadius: 5 }} 
+                  onPress={openGoogleLens}
+                >
+                  <Text style={{ color: '#4285F4', fontWeight: 'bold' }}>Open External Lens</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ backgroundColor: 'red', padding: 10, borderRadius: 5 }} 
+                  onPress={() => setShowScanner(false)}
+                >
+                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -444,18 +404,11 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
           </TouchableOpacity>
-            <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openGoogleLens}>
-              <Text style={styles.searchButtonText}>Google Lens</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#28a745', marginRight: 5}]} onPress={openAIScanner}>
-              <Text style={styles.searchButtonText}>AI Scan</Text>
-            </TouchableOpacity>
-
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openAIScanner}>
+            <Text style={styles.searchButtonText}>Google Lens</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#6f42c1', marginRight: 5}]} onPress={openOCRScanner}>
             <Text style={styles.searchButtonText}>OCR</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#FFD700'}]} onPress={openAISearch}>
-            <Text style={styles.searchButtonText}>AI</Text>
           </TouchableOpacity>
         </View>
         <TextInput style={styles.input} placeholder="Calories" value={newFoodCalories} onChangeText={setNewFoodCalories} keyboardType="numeric" />

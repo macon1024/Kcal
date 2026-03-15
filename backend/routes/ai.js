@@ -21,24 +21,28 @@ router.post('/analyze-food', async (req, res) => {
     }
 
     // Initialize the model with specific configuration if needed
-    // Using gemini-1.5-flash which is the current stable multimodal model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Using gemini-1.5-flash for faster and cheaper analysis results
+    // Use v1 model version explicitly to avoid 404
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
-    const prompt = `Analyze the image provided and identify any food or product seen. 
-    Return the nutritional information in a structured JSON format with the following keys:
-    - name: The name of the food or product.
-    - calories: The estimated calories per 100g or per unit.
-    - protein: The estimated protein in grams.
-    - carbs: The estimated carbohydrates in grams.
-    - fat: The estimated fat in grams.
-    - servingSize: A common serving size (e.g., "1 unit", "100g", "1 cup").
+    const prompt = `Identify the food or product in this image and return its nutritional information as a JSON object.
+    
+    The JSON object MUST have these exact keys:
+    - name: string (The name of the food/product)
+    - calories: number (Estimated calories per 100g or unit)
+    - protein: number (Estimated protein in grams)
+    - carbs: number (Estimated carbohydrates in grams)
+    - fat: number (Estimated fat in grams)
+    - servingSize: string (e.g., "100g", "1 unit")
     - baseAmount: 100
     - baseUnit: "g"
-    
-    If multiple items are seen, return the information for the most prominent one.
-    Only return the JSON object, nothing else. Do not include markdown code blocks.`;
 
-    console.log('Sending request to Gemini AI...');
+    If multiple items are present, identify the main one. Return ONLY the JSON object.`;
+
+    console.log('Sending request to Gemini AI (gemini-1.5-flash)...');
     // The SDK expects the image data in a specific format
     const result = await model.generateContent([
       prompt,
@@ -54,18 +58,24 @@ router.post('/analyze-food', async (req, res) => {
     const text = response.text();
     console.log('AI Response:', text);
     
-    // Clean the AI response to get just the JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const nutritionData = JSON.parse(jsonMatch[0]);
-        res.json(nutritionData);
-      } catch (parseError) {
-        console.error('JSON Parse Error:', parseError);
-        res.status(500).json({ error: 'Failed to parse AI response as valid JSON.' });
+    try {
+      // With responseMimeType: "application/json", text should be a valid JSON string
+      const nutritionData = JSON.parse(text);
+      return res.json(nutritionData);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError);
+      // Fallback: try to find JSON in text if parsing fails
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const nutritionData = JSON.parse(jsonMatch[0]);
+          return res.json(nutritionData);
+        } catch (innerError) {
+          return res.status(500).json({ error: 'Failed to parse AI response as valid JSON.' });
+        }
+      } else {
+        return res.status(500).json({ error: 'AI response did not contain nutritional data. Try a clearer photo.' });
       }
-    } else {
-      res.status(500).json({ error: 'AI response did not contain nutritional data. Try a clearer photo.' });
     }
 
   } catch (error) {

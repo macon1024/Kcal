@@ -55,11 +55,12 @@ export default function AddFoodScreen() {
       const res = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
       if (res.data.status === 1) {
         const product = res.data.product;
+        const nutriments = product.nutriments || {};
         setNewFoodName(product.product_name || '');
-        setNewFoodCalories(String(Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0)));
-        setNewFoodProtein(String(Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0)));
-        setNewFoodCarbs(String(Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0)));
-        setNewFoodFat(String(Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0)));
+        setNewFoodCalories(String(Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_serving'] || nutriments['energy-kcal'] || 0)));
+        setNewFoodProtein(String(Math.round(nutriments.proteins_100g || nutriments.proteins_serving || nutriments.proteins || 0)));
+        setNewFoodCarbs(String(Math.round(nutriments.carbohydrates_100g || nutriments.carbohydrates_serving || nutriments.carbohydrates || 0)));
+        setNewFoodFat(String(Math.round(nutriments.fat_100g || nutriments.fat_serving || nutriments.fat || 0)));
         setNewFoodServingSize(product.serving_size || '100g');
         setNewFoodBaseAmount('100');
         setNewFoodBaseUnit('g');
@@ -101,12 +102,13 @@ export default function AddFoodScreen() {
       const res = await axios.get(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${newFoodName}&search_simple=1&action=process&json=1`);
       if (res.data.products && res.data.products.length > 0) {
         const product = res.data.products[0];
+        const nutriments = product.nutriments || {};
         setNewFoodName(product.product_name || newFoodName);
-        setNewFoodCalories(String(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0));
-        setNewFoodProtein(String(product.nutriments.proteins_100g || product.nutriments.proteins || 0));
-        setNewFoodCarbs(String(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0));
-        setNewFoodFat(String(product.nutriments.fat_100g || product.nutriments.fat || 0));
-        setNewFoodServingSize('100g');
+        setNewFoodCalories(String(Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_serving'] || nutriments['energy-kcal'] || 0)));
+        setNewFoodProtein(String(Math.round(nutriments.proteins_100g || nutriments.proteins_serving || nutriments.proteins || 0)));
+        setNewFoodCarbs(String(Math.round(nutriments.carbohydrates_100g || nutriments.carbohydrates_serving || nutriments.carbohydrates || 0)));
+        setNewFoodFat(String(Math.round(nutriments.fat_100g || nutriments.fat_serving || nutriments.fat || 0)));
+        setNewFoodServingSize(product.serving_size || '100g');
         setNewFoodBaseAmount('100');
         setNewFoodBaseUnit('g');
         Alert.alert('Success', 'Found and filled nutrition data!');

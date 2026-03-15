@@ -42,13 +42,14 @@ const AddFood = () => {
         
         if (res.data.status === 1) {
           const product = res.data.product;
+          const nutriments = product.nutriments || {};
           setNewFood({
             ...newFood,
             name: product.product_name || newFood.name,
-            calories: Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0),
-            protein: Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0),
-            carbs: Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0),
-            fat: Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0),
+            calories: Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_serving'] || nutriments['energy-kcal'] || 0),
+            protein: Math.round(nutriments.proteins_100g || nutriments.proteins_serving || nutriments.proteins || 0),
+            carbs: Math.round(nutriments.carbohydrates_100g || nutriments.carbohydrates_serving || nutriments.carbohydrates || 0),
+            fat: Math.round(nutriments.fat_100g || nutriments.fat_serving || nutriments.fat || 0),
             servingSize: product.serving_size || '100g',
             baseAmount: 100,
             baseUnit: 'g'
@@ -76,14 +77,15 @@ const AddFood = () => {
       
       if (res.data.products && res.data.products.length > 0) {
         const product = res.data.products[0];
+        const nutriments = product.nutriments || {};
         setNewFood({
           ...newFood,
           name: product.product_name || newFood.name,
-          calories: Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0),
-          protein: Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0),
-          carbs: Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0),
-          fat: Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0),
-          servingSize: '100g',
+          calories: Math.round(nutriments['energy-kcal_100g'] || nutriments['energy-kcal_serving'] || nutriments['energy-kcal'] || 0),
+          protein: Math.round(nutriments.proteins_100g || nutriments.proteins_serving || nutriments.proteins || 0),
+          carbs: Math.round(nutriments.carbohydrates_100g || nutriments.carbohydrates_serving || nutriments.carbohydrates || 0),
+          fat: Math.round(nutriments.fat_100g || nutriments.fat_serving || nutriments.fat || 0),
+          servingSize: product.serving_size || '100g',
           baseAmount: 100,
           baseUnit: 'g'
         });

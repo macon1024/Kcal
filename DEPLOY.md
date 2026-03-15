@@ -45,7 +45,12 @@ Render is a cloud platform that offers a free tier for hosting Node.js services.
     - **Build Command**: `npm install && npm run build`
     - **Publish Directory**: `dist`
 
-2.  **Deploy**: Click "Create Static Site". Wait for it to finish. Copy the URL (e.g., `https://kcal-web.onrender.com`).
+4.  **Environment Variables**:
+    - Scroll down to "Environment Variables" and add:
+        - `VITE_API_URL`: Your backend URL + `/api` (e.g., `https://kcal-backend.onrender.com/api`)
+    - *Important: You must set this BEFORE the first deployment, or redeploy after setting it.*
+
+5.  **Deploy**: Click "Create Static Site". Wait for it to finish. Copy the URL (e.g., `https://kcal-web.onrender.com`).
 
 3.  **Update Configuration**:
     - Go back to your **Backend Service** on Render.

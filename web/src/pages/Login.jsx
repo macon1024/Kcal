@@ -8,6 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -32,14 +33,24 @@ const Login = () => {
       return;
     }
     try {
+      setLoading(true);
       setMessage('Sending verification email...');
-      await axios.post(`${API_URL}/auth/resend-verification`, { email });
+      
+      // Set a 15-second timeout for the request
+      await axios.post(`${API_URL}/auth/resend-verification`, { email }, { timeout: 15000 });
+      
       setMessage('Verification email sent! Please check your inbox (and spam folder).');
       setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to resend verification email.');
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timed out. Please check your internet connection or try again later.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to resend verification email.');
+      }
       setMessage('');
       console.error('Resend verification error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,9 +88,19 @@ const Login = () => {
       {error && error.includes('verify') && (
         <button 
           onClick={handleResendVerification}
-          style={{ marginTop: '10px', padding: '10px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', width: '100%', cursor: 'pointer' }}
+          disabled={loading}
+          style={{ 
+            marginTop: '10px', 
+            padding: '10px', 
+            background: loading ? '#ccc' : '#6c757d', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px', 
+            width: '100%', 
+            cursor: loading ? 'not-allowed' : 'pointer' 
+          }}
         >
-          Resend Verification Email
+          {loading ? 'Sending...' : 'Resend Verification Email'}
         </button>
       )}
 

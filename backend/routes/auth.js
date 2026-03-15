@@ -21,7 +21,13 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER, // e.g. your-email@gmail.com
     pass: process.env.EMAIL_PASS  // your generated app password
-  }
+  },
+  // Add timeouts to prevent hanging
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,   // 10 seconds
+  socketTimeout: 10000,     // 10 seconds
+  debug: true,              // Enable debug output
+  logger: true              // Log information to console
 });
 
 // REGISTER

@@ -82,11 +82,12 @@ const AddFood = () => {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const base64String = canvas.toDataURL('image/jpeg').split(',')[1];
+    const base64String = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
     setLoadingAutoFill(true);
     stopCamera();
 
     try {
+      console.log('Sending capture to AI...');
       const res = await axios.post(`${API_URL}/ai/analyze-food`, {
         imageBase64: base64String
       });

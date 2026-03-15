@@ -35,8 +35,9 @@ router.post('/analyze-food', async (req, res) => {
     - baseUnit: "g"
     
     If multiple items are seen, return the information for the most prominent one.
-    Only return the JSON object, nothing else.`;
+    Only return the JSON object, nothing else. Do not include markdown code blocks.`;
 
+    console.log('Sending request to Gemini AI...');
     // The SDK expects the image data in a specific format
     const result = await model.generateContent([
       prompt,
@@ -50,19 +51,26 @@ router.post('/analyze-food', async (req, res) => {
 
     const response = await result.response;
     const text = response.text();
+    console.log('AI Response:', text);
     
     // Clean the AI response to get just the JSON
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const nutritionData = JSON.parse(jsonMatch[0]);
-      res.json(nutritionData);
+      try {
+        const nutritionData = JSON.parse(jsonMatch[0]);
+        res.json(nutritionData);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        res.status(500).json({ error: 'Failed to parse AI response as valid JSON.' });
+      }
     } else {
-      res.status(500).json({ error: 'Failed to parse nutrition data from AI response' });
+      res.status(500).json({ error: 'AI response did not contain nutritional data. Try a clearer photo.' });
     }
 
   } catch (error) {
-    console.error('AI Analysis Error:', error);
-    res.status(500).json({ error: 'Failed to analyze food image with AI' });
+    console.error('AI Analysis Error Details:', error);
+    const errorMessage = error.message || 'Unknown error during AI analysis.';
+    res.status(500).json({ error: `AI Error: ${errorMessage}` });
   }
 });
 

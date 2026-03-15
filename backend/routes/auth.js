@@ -63,14 +63,18 @@ router.post('/register', async (req, res) => {
     console.log(`VERIFICATION LINK FOR ${email}:`);
     console.log(verificationLink);
     console.log(`Current FRONTEND_URL is: ${FRONTEND_URL}`);
+    console.log(`TYPE OF FRONTEND_URL is: ${typeof FRONTEND_URL}`);
     console.log(`======================================\n\n`);
+
+    const mailHtml = `<p>Hello ${username},</p><p>Please verify your account by clicking the link below:</p><a href="${verificationLink}">Verify Account</a><br/><br/><p>If the button doesn't work, copy and paste this link:</p><p>${verificationLink}</p>`;
+    console.log('GENERATED HTML BODY:', mailHtml);
 
     try {
       await transporter.sendMail({
         from: `"Kcal App" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Verify your Kcal Account",
-        html: `<p>Hello ${username},</p><p>Please verify your account by clicking the link below:</p><a href="${verificationLink}">Verify Account</a>`
+        html: mailHtml
       });
     } catch (emailErr) {
       console.error('Failed to send email, but user was created. Please use the link printed in the console to verify.', emailErr);
@@ -125,14 +129,18 @@ router.post('/resend-verification', async (req, res) => {
     console.log(`\n\n=== RESEND VERIFICATION ===`);
     console.log(`LINK FOR ${email}: ${verificationLink}`);
     console.log(`Current FRONTEND_URL is: ${FRONTEND_URL}`);
+    console.log(`TYPE OF FRONTEND_URL is: ${typeof FRONTEND_URL}`);
     console.log(`===========================\n\n`);
+
+    const mailHtml = `<p>Hello ${user.username},</p><p>Please verify your account by clicking the link below:</p><a href="${verificationLink}">Verify Account</a><br/><br/><p>If the button doesn't work, copy and paste this link:</p><p>${verificationLink}</p>`;
+    console.log('GENERATED HTML BODY (RESEND):', mailHtml);
 
     try {
       await transporter.sendMail({
         from: `"Kcal App" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Resend: Verify your Kcal Account",
-        html: `<p>Hello ${user.username},</p><p>Please verify your account by clicking the link below:</p><a href="${verificationLink}">Verify Account</a>`
+        html: mailHtml
       });
       res.json({ message: 'Verification email resent.' });
     } catch (emailErr) {

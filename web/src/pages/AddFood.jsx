@@ -14,6 +14,7 @@ const AddFood = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const fileInputRef = useRef(null);
+  const aiInputRef = useRef(null);
 
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
@@ -176,6 +177,51 @@ const AddFood = () => {
     }
   };
 
+  const handleAISearch = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoadingAutoFill(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result.split(',')[1];
+        try {
+          const res = await axios.post(`${API_URL}/ai/analyze-food`, {
+            imageBase64: base64String
+          });
+
+          if (res.data) {
+            const product = res.data;
+            setNewFood({
+              ...newFood,
+              name: product.name || newFood.name,
+              calories: Math.round(product.calories || 0),
+              protein: Math.round(product.protein || 0),
+              carbs: Math.round(product.carbs || 0),
+              fat: Math.round(product.fat || 0),
+              servingSize: product.servingSize || '100g',
+              baseAmount: 100,
+              baseUnit: 'g'
+            });
+            alert(`AI Identified: ${product.name}`);
+          }
+        } catch (apiErr) {
+          console.error('AI API Error:', apiErr);
+          const errorMsg = apiErr.response?.data?.error || 'Failed to analyze with AI.';
+          alert(errorMsg);
+        } finally {
+          setLoadingAutoFill(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('AI Search Error:', err);
+      alert('Failed to process image for AI search.');
+      setLoadingAutoFill(false);
+    }
+  };
+
   const handleAddFood = async (e) => {
     e.preventDefault();
     try {
@@ -246,6 +292,21 @@ const AddFood = () => {
                 style={{ display: 'none' }} 
                 accept="image/*" 
                 onChange={handleOCR} 
+              />
+              <button 
+                type="button" 
+                onClick={() => aiInputRef.current.click()} 
+                style={{ padding: '8px 16px', background: '#FFD700', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                disabled={loadingAutoFill}
+              >
+                {loadingAutoFill ? 'Thinking...' : 'AI Search'}
+              </button>
+              <input 
+                type="file" 
+                ref={aiInputRef} 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+                onChange={handleAISearch} 
               />
             </div>
           </div>

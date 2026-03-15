@@ -33,10 +33,12 @@ app.get('/', (req, res) => {
 const authRouter = require('./routes/auth');
 const foodRouter = require('./routes/food');
 const logRouter = require('./routes/log');
+const aiRouter = require('./routes/ai');
 
 app.use('/api/auth', authRouter);
 app.use('/api/foods', foodRouter);
 app.use('/api/logs', logRouter);
+app.use('/api/ai', aiRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

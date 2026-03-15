@@ -140,6 +140,52 @@ export default function AddFoodScreen() {
     }
   };
 
+  const openAISearch = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.5, // Reduced quality for faster processing
+        base64: true, // Required for AI processing
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setLoadingAutoFill(true);
+        const imageBase64 = result.assets[0].base64;
+
+        if (!imageBase64) {
+          throw new Error('No image data found');
+        }
+
+        // Call our new backend AI endpoint
+        const res = await axios.post(`${API_URL}/ai/analyze-food`, {
+          imageBase64: imageBase64
+        });
+
+        if (res.data) {
+          const product = res.data;
+          setNewFoodName(product.name || '');
+          setNewFoodCalories(String(product.calories || '0'));
+          setNewFoodProtein(String(product.protein || '0'));
+          setNewFoodCarbs(String(product.carbs || '0'));
+          setNewFoodFat(String(product.fat || '0'));
+          setNewFoodServingSize(product.servingSize || '100g');
+          setNewFoodBaseAmount(String(product.baseAmount || '100'));
+          setNewFoodBaseUnit(product.baseUnit || 'g');
+          Alert.alert('AI Success', `Identified as: ${product.name}`);
+        } else {
+          Alert.alert('AI Error', 'Failed to identify food. Please try again with a clearer photo.');
+        }
+      }
+    } catch (err: any) {
+      console.log('AI Search Error:', err);
+      const errorMessage = err.response?.data?.error || 'Failed to process image with AI.';
+      Alert.alert('AI Error', errorMessage);
+    } finally {
+      setLoadingAutoFill(false);
+    }
+  };
+
   const openOCRScanner = async () => {
     try {
       const result = await ImagePicker.launchCameraAsync({
@@ -361,8 +407,11 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
             <Text style={styles.searchButtonText}>Visual</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#6f42c1'}]} onPress={openOCRScanner}>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#6f42c1', marginRight: 5}]} onPress={openOCRScanner}>
             <Text style={styles.searchButtonText}>OCR</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#FFD700'}]} onPress={openAISearch}>
+            <Text style={styles.searchButtonText}>AI</Text>
           </TouchableOpacity>
         </View>
         <TextInput style={styles.input} placeholder="Calories" value={newFoodCalories} onChangeText={setNewFoodCalories} keyboardType="numeric" />

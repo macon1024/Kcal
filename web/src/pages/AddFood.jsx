@@ -148,15 +148,24 @@ const AddFood = () => {
       const carbs = findValue(['carbs', 'carbohydrate', 'carbohidratos', 'hidratos de carbono']);
       const fat = findValue(['fat', 'total fat', 'grasas', 'gordura']);
 
+      // Find potential name
+      const findName = () => {
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
+        if (lines.length > 0) return lines[0];
+        return null;
+      };
+      const detectedName = findName();
+
       setNewFood(prev => ({
         ...prev,
+        name: detectedName || prev.name,
         calories: calories !== null ? calories : prev.calories,
         protein: protein !== null ? protein : prev.protein,
         carbs: carbs !== null ? carbs : prev.carbs,
         fat: fat !== null ? fat : prev.fat,
       }));
 
-      alert('OCR Scan Complete! Form updated with the detected nutrition values.');
+      alert('OCR Scan Complete! Form updated with detected nutrition values.');
     } catch (err) {
       console.error('OCR Error:', err);
       alert('Failed to process image. Please try a clearer photo.');

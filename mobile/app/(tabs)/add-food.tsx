@@ -153,30 +153,49 @@ export default function AddFoodScreen() {
         const { text } = await recognizeText(result.assets[0].uri);
         console.log('OCR Result:', text);
 
+        // More robust value finding
         const findValue = (keywords: string[]) => {
+          const normalizedText = text.toLowerCase().replace(/\s+/g, ' ');
           for (const keyword of keywords) {
-            const regex = new RegExp(`${keyword}\\s*[:\\-]?\\s*(\\d+\\.?\\d*)`, 'i');
-            const match = text.match(regex);
-            if (match) return Math.round(parseFloat(match[1]));
+            const lowerKey = keyword.toLowerCase();
+            const index = normalizedText.indexOf(lowerKey);
+            
+            if (index !== -1) {
+              const afterText = normalizedText.substring(index + lowerKey.length, index + lowerKey.length + 30);
+              const match = afterText.match(/(\d+\.?\d*)/);
+              if (match) {
+                const val = parseFloat(match[1]);
+                if (!isNaN(val)) return Math.round(val);
+              }
+            }
           }
           return null;
         };
 
-        const calories = findValue(['calories', 'kcal', 'energy']);
-        const protein = findValue(['protein']);
-        const carbs = findValue(['carbs', 'carbohydrate']);
-        const fat = findValue(['fat', 'total fat']);
+        const calories = findValue(['calories', 'kcal', 'energy', 'valor energético', 'calorias']);
+        const protein = findValue(['protein', 'proteínas', 'proteina']);
+        const carbs = findValue(['carbs', 'carbohydrate', 'carbohidratos', 'hidratos de carbono']);
+        const fat = findValue(['fat', 'total fat', 'grasas', 'gordura']);
 
+        // Try to find product name (usually at the very beginning of the label or near "Product:")
+        const findName = () => {
+          const lines = text.split('\n').filter(l => l.trim().length > 3);
+          if (lines.length > 0) return lines[0].trim();
+          return null;
+        };
+        const detectedName = findName();
+
+        if (detectedName) setNewFoodName(detectedName);
         if (calories !== null) setNewFoodCalories(String(calories));
         if (protein !== null) setNewFoodProtein(String(protein));
         if (carbs !== null) setNewFoodCarbs(String(carbs));
         if (fat !== null) setNewFoodFat(String(fat));
 
-        Alert.alert('OCR Complete', 'Updated values based on labels seen.');
+        Alert.alert('Success', 'Nutrition values auto-filled from image!');
       }
     } catch (err) {
       console.log(err);
-      Alert.alert('Error', 'Failed to read text from labels.');
+      Alert.alert('Error', 'Failed to read label. Please ensure the photo is clear and well-lit.');
     } finally {
       setLoadingAutoFill(false);
     }

@@ -4,6 +4,11 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+console.log('##############################################');
+console.log('###   KCAL BACKEND VERSION: 1.0.5-FIXED    ###');
+console.log('###   DEPLOYMENT TIMESTAMP: ' + new Date().toISOString() + ' ###');
+console.log('##############################################');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

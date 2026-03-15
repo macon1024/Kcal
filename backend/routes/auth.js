@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://kcal-web.onrender.com';
 
 // Configure Nodemailer (Using a mock ethereal email for testing, or replace with real SMTP)
 // To test this easily, we will print the verification link in the console as well.

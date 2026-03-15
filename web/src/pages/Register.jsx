@@ -8,6 +8,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -16,12 +17,20 @@ const Register = () => {
     setError('');
     setMessage('');
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, { username, email, password });
+      setLoading(true);
+      setMessage('Registering and sending verification email...');
+      const res = await axios.post(`${API_URL}/auth/register`, { username, email, password }, { timeout: 15000 });
       setMessage(res.data.message);
       // Optional: automatically navigate to login after a delay
       // setTimeout(() => navigate('/login'), 5000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timed out. Please check your internet connection or try again later.');
+      } else {
+        setError(err.response?.data?.message || 'Registration failed');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,8 +71,19 @@ const Register = () => {
             style={{ width: '100%', padding: '8px', marginTop: '5px' }}
           />
         </div>
-        <button type="submit" style={{ padding: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
-          Register
+        <button 
+          type="submit" 
+          disabled={loading}
+          style={{ 
+            padding: '10px', 
+            background: loading ? '#ccc' : '#28a745', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
       <p style={{ marginTop: '20px' }}>

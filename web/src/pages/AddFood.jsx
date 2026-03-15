@@ -32,16 +32,19 @@ const AddFood = () => {
     if (!newFood.name) return alert('Please enter a food name first');
     setLoadingAutoFill(true);
     try {
-      const res = await axios.get(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${newFood.name}&search_simple=1&action=process&json=1`);
+      // Use https and ensure proper encoding
+      const encodedSearch = encodeURIComponent(newFood.name);
+      const res = await axios.get(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodedSearch}&search_simple=1&action=process&json=1`);
+      
       if (res.data.products && res.data.products.length > 0) {
         const product = res.data.products[0];
         setNewFood({
           ...newFood,
           name: product.product_name || newFood.name,
-          calories: product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0,
-          protein: product.nutriments.proteins_100g || product.nutriments.proteins || 0,
-          carbs: product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0,
-          fat: product.nutriments.fat_100g || product.nutriments.fat || 0,
+          calories: Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0),
+          protein: Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0),
+          carbs: Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0),
+          fat: Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0),
           servingSize: '100g',
           baseAmount: 100,
           baseUnit: 'g'
@@ -51,8 +54,8 @@ const AddFood = () => {
         alert('No data found for this food.');
       }
     } catch (err) {
-      console.error(err);
-      alert('Failed to fetch data.');
+      console.error('OpenFoodFacts API Error:', err);
+      alert('Failed to fetch data from OpenFoodFacts. The service might be temporarily down or blocked.');
     } finally {
       setLoadingAutoFill(false);
     }

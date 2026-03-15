@@ -21,7 +21,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: 'apikey', // This is always 'apikey' for SendGrid
     pass: process.env.SENDGRID_API_KEY
-  }
+  },
+  // Add timeouts to ensure it doesn't hang indefinitely
+  connectionTimeout: 10000, 
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 /*
 const transporter = nodemailer.createTransport({

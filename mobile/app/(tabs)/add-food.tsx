@@ -174,35 +174,6 @@ export default function AddFoodScreen() {
     setShowScanner(true);
   };
 
-  const openVisualSearch = async () => {
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        quality: 1,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        // Since we can't do direct visual search without a server/API,
-        // we redirect to Google Lens which is the industry standard for "searching what the camera sees"
-        const imageUrl = result.assets[0].uri;
-        // Google Lens web search for images
-        const googleLensUrl = `https://www.google.com/searchbyimage?image_url=${encodeURIComponent(imageUrl)}`;
-        
-        Alert.alert(
-          'Visual Search',
-          'Identify this product using Google Lens?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Search', onPress: () => Linking.openURL(googleLensUrl) }
-          ]
-        );
-      }
-    } catch (err) {
-      Alert.alert('Error', 'Failed to open camera for visual search.');
-    }
-  };
-
   const openAISearch = async () => {
     try {
       const result = await ImagePicker.launchCameraAsync({
@@ -479,9 +450,7 @@ export default function AddFoodScreen() {
             <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#28a745', marginRight: 5}]} onPress={openAIScanner}>
               <Text style={styles.searchButtonText}>AI Scan</Text>
             </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
-            <Text style={styles.searchButtonText}>Visual</Text>
-          </TouchableOpacity>
+
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#6f42c1', marginRight: 5}]} onPress={openOCRScanner}>
             <Text style={styles.searchButtonText}>OCR</Text>
           </TouchableOpacity>

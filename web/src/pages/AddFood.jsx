@@ -358,13 +358,6 @@ const AddFood = () => {
               </button>
               <button 
                 type="button" 
-                onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(newFood.name || 'food product')}&tbm=isch`, '_blank')} 
-                style={{ padding: '8px 16px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-              >
-                Visual Search
-              </button>
-              <button 
-                type="button" 
                 onClick={() => fileInputRef.current.click()} 
                 style={{ padding: '8px 16px', background: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                 disabled={ocrLoading}

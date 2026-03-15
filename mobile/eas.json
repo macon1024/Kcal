@@ -4,7 +4,9 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease",
-        "image": "ubuntu-22.04-jdk-17-ndk-r21e" 
+        "env": {
+          "EXPO_USE_FAST_RESOLVER": "false"
+        }
       },
       "ios": {
         "simulator": true

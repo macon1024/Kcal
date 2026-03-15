@@ -36,8 +36,8 @@ const Login = () => {
       setLoading(true);
       setMessage('Sending verification email...');
       
-      // Set a 15-second timeout for the request
-      await axios.post(`${API_URL}/auth/resend-verification`, { email }, { timeout: 15000 });
+      // Set a 30-second timeout for the request
+      await axios.post(`${API_URL}/auth/resend-verification`, { email }, { timeout: 30000 });
       
       setMessage('Verification email sent! Please check your inbox (and spam folder).');
       setError('');

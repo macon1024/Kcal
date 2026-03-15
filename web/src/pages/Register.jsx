@@ -19,7 +19,7 @@ const Register = () => {
     try {
       setLoading(true);
       setMessage('Registering and sending verification email...');
-      const res = await axios.post(`${API_URL}/auth/register`, { username, email, password }, { timeout: 15000 });
+      const res = await axios.post(`${API_URL}/auth/register`, { username, email, password }, { timeout: 30000 });
       setMessage(res.data.message);
       // Optional: automatically navigate to login after a delay
       // setTimeout(() => navigate('/login'), 5000);

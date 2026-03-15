@@ -22,7 +22,7 @@ router.post('/analyze-food', async (req, res) => {
 
     // Use the Gemini 1.5 Flash model for fast image analysis
     // Try 'gemini-1.5-flash' or 'gemini-1.5-flash-latest'
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: 'v1' });
 
     const prompt = `Analyze the image provided and identify any food or product seen. 
     Return the nutritional information in a structured JSON format with the following keys:

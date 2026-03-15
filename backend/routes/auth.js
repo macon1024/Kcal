@@ -16,17 +16,36 @@ console.log('------------------------------------------------');
 
 // Configure Nodemailer (Using a mock ethereal email for testing, or replace with real SMTP)
 // To test this easily, we will print the verification link in the console as well.
-const transporter = nodemailer.createTransport({
-  service: 'SendGrid',
-  auth: {
-    user: 'apikey', // This is always 'apikey' for SendGrid
-    pass: process.env.SENDGRID_API_KEY
-  },
-  // Add timeouts to ensure it doesn't hang indefinitely
-  connectionTimeout: 10000, 
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-});
+const sgMail = require('@sendgrid/mail');
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
+
+// Helper function to send email
+const sendEmail = async (to, subject, html) => {
+  if (process.env.SENDGRID_API_KEY) {
+    const msg = {
+      to,
+      from: process.env.EMAIL_USER, // Verified sender
+      subject,
+      html,
+    };
+    await sgMail.send(msg);
+  } else {
+    // Fallback to Nodemailer (for Gmail or other SMTP)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    await transporter.sendMail({ from: process.env.EMAIL_USER, to, subject, html });
+  }
+};
 /*
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -97,12 +116,7 @@ router.post('/register', async (req, res) => {
     console.log('GENERATED HTML BODY:', mailHtml);
 
     try {
-      await transporter.sendMail({
-        from: `"Kcal App" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Verify your Kcal Account",
-        html: mailHtml
-      });
+      await sendEmail(email, "Verify your Kcal Account", mailHtml);
       res.status(201).json({ message: 'User registered. Please check your email to verify your account.' });
     } catch (emailErr) {
       console.error('Failed to send email, but user was created.', emailErr);
@@ -168,12 +182,7 @@ router.post('/resend-verification', async (req, res) => {
     console.log('GENERATED HTML BODY (RESEND):', mailHtml);
 
     try {
-      await transporter.sendMail({
-        from: `"Kcal App" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Resend: Verify your Kcal Account",
-        html: mailHtml
-      });
+      await sendEmail(email, "Resend: Verify your Kcal Account", mailHtml);
       res.json({ message: 'Verification email resent.' });
     } catch (emailErr) {
       console.error('Failed to resend email:', emailErr);

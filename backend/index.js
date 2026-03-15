@@ -13,7 +13,7 @@ try {
 dotenv.config();
 
 console.log('##############################################');
-console.log('###   KCAL BACKEND VERSION: 1.0.15-SENDGRID-TIMEOUT ###');
+console.log('###   KCAL BACKEND VERSION: 1.0.16-SENDGRID-WEB-API ###');
 console.log('###   DEPLOYMENT TIMESTAMP: ' + new Date().toISOString() + ' ###');
 console.log('##############################################');
 

@@ -5,8 +5,14 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Access your API key as an environment variable (see "Set up your API key" above)
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Access your API key as an environment variable
+let genAI;
+try {
+  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  console.log('GoogleGenerativeAI initialized successfully.');
+} catch (e) {
+  console.error('Error initializing GoogleGenerativeAI:', e.message);
+}
 
 router.post('/analyze-food', async (req, res) => {
   try {
@@ -17,16 +23,19 @@ router.post('/analyze-food', async (req, res) => {
     }
 
     if (!process.env.GEMINI_API_KEY) {
+        console.error('ERROR: GEMINI_API_KEY is missing from .env');
         return res.status(500).json({ error: 'GEMINI_API_KEY is not configured in the backend environment variables.' });
+    } else {
+        console.log('GEMINI_API_KEY is present (length: ' + process.env.GEMINI_API_KEY.length + ')');
     }
 
     // Initialize the model with specific configuration if needed
     // Using gemini-1.5-flash for faster and cheaper analysis results
-    // Use v1 model version explicitly to avoid 404
+    // Use v1beta explicitly for flash models to avoid 404
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: { responseMimeType: "application/json" }
-    });
+    }, { apiVersion: 'v1beta' });
 
     const prompt = `Identify the food or product in this image and return its nutritional information as a JSON object.
     

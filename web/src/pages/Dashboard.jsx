@@ -9,6 +9,7 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchLogs();
@@ -16,7 +17,7 @@ const Dashboard = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/logs/${userId}/${today}`);
+      const res = await axios.get(`${API_URL}/logs/${userId}/${today}`);
       setLogs(res.data);
     } catch (err) {
       console.error(err);
@@ -32,7 +33,7 @@ const Dashboard = () => {
       return;
     }
     try {
-      await axios.delete(`http://localhost:5000/api/logs/${logs._id}/meal/${mealId}`);
+      await axios.delete(`${API_URL}/logs/${logs._id}/meal/${mealId}`);
       // Refresh logs after deletion
       fetchLogs();
     } catch (err) {

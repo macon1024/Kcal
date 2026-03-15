@@ -5,11 +5,12 @@ import axios from 'axios';
 const Verify = () => {
   const { token } = useParams();
   const [status, setStatus] = useState('Verifying...');
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     const verifyAccount = async () => {
       try {
-        const res = await axios.post('http://localhost:5000/api/auth/verify', { token });
+        const res = await axios.post(`${API_URL}/auth/verify`, { token });
         setStatus(res.data.message);
       } catch (err) {
         setStatus(err.response?.data?.message || 'Verification failed. The link may be invalid or expired.');

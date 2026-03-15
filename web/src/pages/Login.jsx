@@ -11,12 +11,14 @@ const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
       login(res.data.user, res.data.token);
       navigate('/');
     } catch (err) {
@@ -31,7 +33,7 @@ const Login = () => {
     }
     try {
       setMessage('Sending verification email...');
-      await axios.post('http://localhost:5000/api/auth/resend-verification', { email });
+      await axios.post(`${API_URL}/auth/resend-verification`, { email });
       setMessage('Verification email sent! Please check your inbox (and spam folder).');
       setError('');
     } catch (err) {

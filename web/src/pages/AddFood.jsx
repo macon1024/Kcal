@@ -13,6 +13,7 @@ const AddFood = () => {
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
   const today = new Date().toISOString().split('T')[0];
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchFoods();
@@ -20,7 +21,7 @@ const AddFood = () => {
 
   const fetchFoods = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/foods');
+      const res = await axios.get(`${API_URL}/foods`);
       setFoods(res.data);
     } catch (err) {
       console.error(err);
@@ -60,7 +61,7 @@ const AddFood = () => {
   const handleAddFood = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/foods', newFood);
+      const res = await axios.post(`${API_URL}/foods`, newFood);
       setFoods([...foods, res.data]);
       setNewFood({ name: '', calories: 0, protein: 0, carbs: 0, fat: 0, servingSize: '100g', baseAmount: 100, baseUnit: 'g' });
     } catch (err) {
@@ -72,7 +73,7 @@ const AddFood = () => {
     if (!selectedFood) return;
 
     try {
-      await axios.post('http://localhost:5000/api/logs', {
+      await axios.post(`${API_URL}/logs`, {
         userId,
         date: today,
         meals: [{ 

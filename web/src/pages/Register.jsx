@@ -9,13 +9,14 @@ const Register = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', { username, email, password });
+      const res = await axios.post(`${API_URL}/auth/register`, { username, email, password });
       setMessage(res.data.message);
       // Optional: automatically navigate to login after a delay
       // setTimeout(() => navigate('/login'), 5000);

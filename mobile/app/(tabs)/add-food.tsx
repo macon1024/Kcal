@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { StyleSheet, View, Text, TextInput, Button, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import axios from 'axios';
+import * as Linking from 'expo-linking';
+import * as ImagePicker from 'expo-image-picker';
 
 import { API_URL } from '@/constants/api';
 import { AuthContext } from '@/context/AuthContext';
@@ -66,11 +68,27 @@ export default function AddFoodScreen() {
         setNewFoodBaseUnit('g');
         Alert.alert('Success', 'Product found!');
       } else {
-        Alert.alert('Not Found', 'Product not found in database.');
+        const searchUrl = `https://www.google.com/search?q=barcode+${data}+food+nutrition`;
+        Alert.alert(
+          'Not Found',
+          'Product not found in database. Search the internet?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Search Web', onPress: () => Linking.openURL(searchUrl) }
+          ]
+        );
       }
     } catch (err) {
       console.log(err);
-      Alert.alert('Error', 'Failed to fetch product data.');
+      const searchUrl = `https://www.google.com/search?q=barcode+${data}+food+nutrition`;
+      Alert.alert(
+        'Error',
+        'Failed to fetch data. Search the internet?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Search Web', onPress: () => Linking.openURL(searchUrl) }
+        ]
+      );
     } finally {
       setLoadingAutoFill(false);
     }
@@ -90,6 +108,35 @@ export default function AddFoodScreen() {
     }
     setScanned(false);
     setShowScanner(true);
+  };
+
+  const openVisualSearch = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        // Since we can't do direct visual search without a server/API,
+        // we redirect to Google Lens which is the industry standard for "searching what the camera sees"
+        const imageUrl = result.assets[0].uri;
+        // Google Lens web search for images
+        const googleLensUrl = `https://www.google.com/searchbyimage?image_url=${encodeURIComponent(imageUrl)}`;
+        
+        Alert.alert(
+          'Visual Search',
+          'Identify this product using Google Lens?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Search', onPress: () => Linking.openURL(googleLensUrl) }
+          ]
+        );
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to open camera for visual search.');
+    }
   };
 
   const handleAutoFill = async () => {
@@ -246,8 +293,11 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666'}]} onPress={openScanner}>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666', marginRight: 5}]} onPress={openScanner}>
             <Text style={styles.searchButtonText}>Scan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4'}]} onPress={openVisualSearch}>
+            <Text style={styles.searchButtonText}>Visual</Text>
           </TouchableOpacity>
         </View>
         <TextInput style={styles.input} placeholder="Calories" value={newFoodCalories} onChangeText={setNewFoodCalories} keyboardType="numeric" />

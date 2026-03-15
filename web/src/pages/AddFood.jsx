@@ -56,11 +56,17 @@ const AddFood = () => {
           });
           alert('Found and filled nutrition data!');
         } else {
-          alert('Product not found in OpenFoodFacts database.');
+          const searchUrl = `https://www.google.com/search?q=barcode+${barcode}+food+nutrition`;
+          if (window.confirm('Product not found in OpenFoodFacts database. Would you like to search the internet for it?')) {
+            window.open(searchUrl, '_blank');
+          }
         }
       } catch (apiErr) {
         console.error(apiErr);
-        alert('Failed to fetch product data.');
+        const searchUrl = `https://www.google.com/search?q=barcode+${barcode}+food+nutrition`;
+        if (window.confirm('Failed to fetch product data. Would you like to search the internet for it?')) {
+          window.open(searchUrl, '_blank');
+        }
       } finally {
         setLoadingAutoFill(false);
       }
@@ -149,6 +155,13 @@ const AddFood = () => {
               </button>
               <button type="button" onClick={() => setShowScanner(true)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                 Scan
+              </button>
+              <button 
+                type="button" 
+                onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(newFood.name || 'food product')}&tbm=isch`, '_blank')} 
+                style={{ padding: '8px 16px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                Visual Search
               </button>
             </div>
           </div>

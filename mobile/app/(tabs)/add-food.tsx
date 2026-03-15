@@ -422,7 +422,8 @@ export default function AddFoodScreen() {
           <View style={styles.scannerContainer}>
             <CameraView 
               ref={cameraRef}
-              style={StyleSheet.absoluteFillObject}
+              style={{ flex: 1 }}
+              facing="back"
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               barcodeScannerSettings={{
                 barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e"],
@@ -575,9 +576,9 @@ const styles = StyleSheet.create({
   },
   scannerContainer: {
     flex: 1,
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'black',
   },
   scannerOverlay: {
     position: 'absolute',

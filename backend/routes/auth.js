@@ -19,21 +19,18 @@ console.log('------------------------------------------------');
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // Use STARTTLS
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER, // e.g. your-email@gmail.com
     pass: process.env.EMAIL_PASS  // your generated app password
   },
-  tls: {
-    rejectUnauthorized: false
-  },
   // Force IPv4 to avoid ENETUNREACH errors on some networks (like Render)
   family: 4,
   // Add timeouts to prevent hanging
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,   // 10 seconds
-  socketTimeout: 10000,     // 10 seconds
+  connectionTimeout: 20000, // 20 seconds
+  greetingTimeout: 20000,   // 20 seconds
+  socketTimeout: 20000,     // 20 seconds
   debug: true,              // Enable debug output
   logger: true              // Log information to console
 });
@@ -93,7 +90,9 @@ router.post('/register', async (req, res) => {
       res.status(201).json({ message: 'User registered. Please check your email to verify your account.' });
     } catch (emailErr) {
       console.error('Failed to send email, but user was created.', emailErr);
-      res.status(201).json({ message: `User registered, but email failed: ${emailErr.message}. Please ask admin for verification link.` });
+      res.status(201).json({ 
+        message: `User registered, but email failed (${emailErr.code}). COPY THIS LINK to verify: ${verificationLink}` 
+      });
     }
   } catch (err) {
     console.error(err);
@@ -159,7 +158,9 @@ router.post('/resend-verification', async (req, res) => {
       res.json({ message: 'Verification email resent.' });
     } catch (emailErr) {
       console.error('Failed to resend email:', emailErr);
-      res.status(500).json({ message: `Failed to send email: ${emailErr.message}` });
+      res.status(500).json({ 
+        message: `Email failed (${emailErr.code}). COPY THIS LINK to verify: ${verificationLink}` 
+      });
     }
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

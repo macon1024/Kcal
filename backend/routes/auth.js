@@ -82,11 +82,11 @@ router.post('/register', async (req, res) => {
         subject: "Verify your Kcal Account",
         html: mailHtml
       });
+      res.status(201).json({ message: 'User registered. Please check your email to verify your account.' });
     } catch (emailErr) {
-      console.error('Failed to send email, but user was created. Please use the link printed in the console to verify.', emailErr);
+      console.error('Failed to send email, but user was created.', emailErr);
+      res.status(201).json({ message: `User registered, but email failed: ${emailErr.message}. Please ask admin for verification link.` });
     }
-
-    res.status(201).json({ message: 'User registered. Please check your email to verify your account.' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error during registration' });
@@ -151,7 +151,7 @@ router.post('/resend-verification', async (req, res) => {
       res.json({ message: 'Verification email resent.' });
     } catch (emailErr) {
       console.error('Failed to resend email:', emailErr);
-      res.status(500).json({ message: 'Failed to send email. Please verify using the console link.' });
+      res.status(500).json({ message: `Failed to send email: ${emailErr.message}` });
     }
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

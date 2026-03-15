@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import BarcodeScannerComponent from 'react-qr-barcode-scanner';
+import Tesseract from 'tesseract.js';
 import { AuthContext } from '../context/AuthContext';
 
 const AddFood = () => {
@@ -11,6 +12,8 @@ const AddFood = () => {
   const [newFood, setNewFood] = useState({ name: '', calories: 0, protein: 0, carbs: 0, fat: 0, servingSize: '100g', baseAmount: 100, baseUnit: 'g' });
   const [loadingAutoFill, setLoadingAutoFill] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
@@ -107,6 +110,63 @@ const AddFood = () => {
     }
   };
 
+  const handleOCR = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setOcrLoading(true);
+    try {
+      const { data: { text } } = await Tesseract.recognize(file, 'eng');
+      console.log('OCR Result:', text);
+
+      // More robust value finding: look for the keyword and then the next number
+      const findValue = (keywords) => {
+        // Remove spaces and make lowercase for better matching
+        const normalizedText = text.toLowerCase().replace(/\s+/g, ' ');
+        
+        for (const keyword of keywords) {
+          const lowerKey = keyword.toLowerCase();
+          const index = normalizedText.indexOf(lowerKey);
+          
+          if (index !== -1) {
+            // Look at text after the keyword (up to 30 characters)
+            const afterText = normalizedText.substring(index + lowerKey.length, index + lowerKey.length + 30);
+            // Match the first number (integer or decimal)
+            const match = afterText.match(/(\d+\.?\d*)/);
+            if (match) {
+              const val = parseFloat(match[1]);
+              // Basic sanity check: if calories, usually > 0; if macros, usually < 100g per 100g
+              if (!isNaN(val)) return Math.round(val);
+            }
+          }
+        }
+        return null;
+      };
+
+      const calories = findValue(['calories', 'kcal', 'energy', 'valor energético', 'calorias']);
+      const protein = findValue(['protein', 'proteínas', 'proteina']);
+      const carbs = findValue(['carbs', 'carbohydrate', 'carbohidratos', 'hidratos de carbono']);
+      const fat = findValue(['fat', 'total fat', 'grasas', 'gordura']);
+
+      setNewFood(prev => ({
+        ...prev,
+        calories: calories !== null ? calories : prev.calories,
+        protein: protein !== null ? protein : prev.protein,
+        carbs: carbs !== null ? carbs : prev.carbs,
+        fat: fat !== null ? fat : prev.fat,
+      }));
+
+      alert('OCR Scan Complete! Form updated with the detected nutrition values.');
+    } catch (err) {
+      console.error('OCR Error:', err);
+      alert('Failed to process image. Please try a clearer photo.');
+    } finally {
+      setOcrLoading(false);
+      // Clear input so same file can be selected again
+      e.target.value = '';
+    }
+  };
+
   const handleAddFood = async (e) => {
     e.preventDefault();
     try {
@@ -163,6 +223,21 @@ const AddFood = () => {
               >
                 Visual Search
               </button>
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current.click()} 
+                style={{ padding: '8px 16px', background: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                disabled={ocrLoading}
+              >
+                {ocrLoading ? 'Reading...' : 'Scan Labels (OCR)'}
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: 'none' }} 
+                accept="image/*" 
+                onChange={handleOCR} 
+              />
             </div>
           </div>
 

@@ -30,6 +30,7 @@ Render is a cloud platform that offers a free tier for hosting Node.js services.
         - `EMAIL_USER`: (Your Gmail address)
         - `EMAIL_PASS`: (Your Google App Password)
     - *Note: Since we switched to NeDB (file-based DB), the data will be reset every time the server restarts on the free tier. For persistent data, you would normally use MongoDB Atlas.*
+    - *Important: If you see "EMERGENCY-LINK" or email errors, check that `EMAIL_USER` and `EMAIL_PASS` are correct.*
 
 5.  **Deploy**: Click "Create Web Service". Wait for it to finish. Copy the URL (e.g., `https://kcal-backend.onrender.com`).
 
@@ -52,7 +53,7 @@ Render is a cloud platform that offers a free tier for hosting Node.js services.
 
 5.  **Deploy**: Click "Create Static Site". Wait for it to finish. Copy the URL (e.g., `https://kcal-web.onrender.com`).
 
-3.  **Update Configuration**:
+4.  **Update Configuration**:
     - Go back to your **Backend Service** on Render.
     - Update `FRONTEND_URL` to your new Web App URL (`https://kcal-web.onrender.com`).
     - **Redeploy** the backend.

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import BarcodeScannerComponent from 'react-qr-barcode-scanner';
 import { AuthContext } from '../context/AuthContext';
 
 const AddFood = () => {
@@ -9,6 +10,7 @@ const AddFood = () => {
   const [mealType, setMealType] = useState('breakfast');
   const [newFood, setNewFood] = useState({ name: '', calories: 0, protein: 0, carbs: 0, fat: 0, servingSize: '100g', baseAmount: 100, baseUnit: 'g' });
   const [loadingAutoFill, setLoadingAutoFill] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
@@ -25,6 +27,42 @@ const AddFood = () => {
       setFoods(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleScan = async (err, result) => {
+    if (result) {
+      setShowScanner(false);
+      const barcode = result.text;
+      setLoadingAutoFill(true);
+      alert(`Scanned Barcode: ${barcode}`);
+      
+      try {
+        const res = await axios.get(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        
+        if (res.data.status === 1) {
+          const product = res.data.product;
+          setNewFood({
+            ...newFood,
+            name: product.product_name || newFood.name,
+            calories: Math.round(product.nutriments['energy-kcal_100g'] || product.nutriments['energy-kcal'] || 0),
+            protein: Math.round(product.nutriments.proteins_100g || product.nutriments.proteins || 0),
+            carbs: Math.round(product.nutriments.carbohydrates_100g || product.nutriments.carbohydrates || 0),
+            fat: Math.round(product.nutriments.fat_100g || product.nutriments.fat || 0),
+            servingSize: product.serving_size || '100g',
+            baseAmount: 100,
+            baseUnit: 'g'
+          });
+          alert('Found and filled nutrition data!');
+        } else {
+          alert('Product not found in OpenFoodFacts database.');
+        }
+      } catch (apiErr) {
+        console.error(apiErr);
+        alert('Failed to fetch product data.');
+      } finally {
+        setLoadingAutoFill(false);
+      }
     }
   };
 
@@ -104,11 +142,36 @@ const AddFood = () => {
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Food Name</label>
             <div style={{ display: 'flex', gap: '10px' }}>
               <input style={{ flex: 1, padding: '8px' }} placeholder="e.g. Avocado" value={newFood.name} onChange={e => setNewFood({...newFood, name: e.target.value})} required />
-              <button type="button" onClick={handleAutoFill} disabled={loadingAutoFill} style={{ padding: '8px 16px' }}>
-                {loadingAutoFill ? 'Searching...' : 'Auto-fill from Web'}
+              <button type="button" onClick={handleAutoFill} disabled={loadingAutoFill} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+                {loadingAutoFill ? 'Searching...' : 'Auto-fill'}
+              </button>
+              <button type="button" onClick={() => setShowScanner(true)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Scan
               </button>
             </div>
           </div>
+
+          {showScanner && (
+            <div style={{ 
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+              background: 'rgba(0,0,0,0.8)', zIndex: 1000, 
+              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' 
+            }}>
+              <div style={{ background: 'white', padding: '20px', borderRadius: '8px', maxWidth: '90%', width: '400px' }}>
+                <h3 style={{ marginTop: 0 }}>Scan Barcode</h3>
+                <div style={{ width: '100%', height: '300px', background: '#000', marginBottom: '15px' }}>
+                  <BarcodeScannerComponent
+                    width={300}
+                    height={300}
+                    onUpdate={handleScan}
+                  />
+                </div>
+                <button type="button" onClick={() => setShowScanner(false)} style={{ width: '100%', padding: '10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Calories (per base amount)</label>

@@ -8,6 +8,12 @@ const User = require('../models/User');
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://kcal-web.onrender.com';
 
+console.log('------------------------------------------------');
+console.log('AUTH SERVICE INITIALIZED');
+console.log('FRONTEND_URL:', FRONTEND_URL);
+console.log('process.env.FRONTEND_URL:', process.env.FRONTEND_URL);
+console.log('------------------------------------------------');
+
 // Configure Nodemailer (Using a mock ethereal email for testing, or replace with real SMTP)
 // To test this easily, we will print the verification link in the console as well.
 const transporter = nodemailer.createTransport({
@@ -56,6 +62,7 @@ router.post('/register', async (req, res) => {
     console.log(`\n\n======================================`);
     console.log(`VERIFICATION LINK FOR ${email}:`);
     console.log(verificationLink);
+    console.log(`Current FRONTEND_URL is: ${FRONTEND_URL}`);
     console.log(`======================================\n\n`);
 
     try {
@@ -117,6 +124,7 @@ router.post('/resend-verification', async (req, res) => {
     const verificationLink = `${FRONTEND_URL}/verify/${verificationToken}`;
     console.log(`\n\n=== RESEND VERIFICATION ===`);
     console.log(`LINK FOR ${email}: ${verificationLink}`);
+    console.log(`Current FRONTEND_URL is: ${FRONTEND_URL}`);
     console.log(`===========================\n\n`);
 
     try {

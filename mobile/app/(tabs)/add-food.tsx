@@ -134,14 +134,14 @@ export default function AddFoodScreen() {
     }
   };
 
-  const openCameraAI = async () => {
+  const openGoogleLens = async () => {
     if (!permission) {
         return;
     }
     if (!permission.granted) {
       const { granted } = await requestPermission();
       if (!granted) {
-        Alert.alert('Permission needed', 'Camera permission is required for AI search.');
+        Alert.alert('Permission needed', 'Camera permission is required for Google Lens search.');
         return;
       }
     }
@@ -430,11 +430,11 @@ export default function AddFoodScreen() {
               }}
             />
             <View style={styles.scannerOverlay}>
-              <Text style={styles.scannerText}>Point at food and capture for AI search</Text>
+              <Text style={styles.scannerText}>Point at food and capture for Lens search</Text>
               
               <View style={styles.captureButtonRow}>
-                <TouchableOpacity style={styles.captureButton} onPress={handleCapture} disabled={loadingAutoFill}>
-                  {loadingAutoFill ? <ActivityIndicator color="#fff" /> : <View style={styles.captureInner} />}
+                <TouchableOpacity style={[styles.captureButton, { borderColor: '#4285F4' }]} onPress={handleCapture} disabled={loadingAutoFill}>
+                  {loadingAutoFill ? <ActivityIndicator color="#4285F4" /> : <View style={[styles.captureInner, { backgroundColor: '#4285F4' }]} />}
                 </TouchableOpacity>
               </View>
 
@@ -448,8 +448,8 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666', marginRight: 5}]} onPress={openCameraAI}>
-            <Text style={styles.searchButtonText}>Camera AI</Text>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openGoogleLens}>
+            <Text style={styles.searchButtonText}>Google Lens</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
             <Text style={styles.searchButtonText}>Visual</Text>

@@ -4,6 +4,7 @@ import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import axios from 'axios';
 import * as Linking from 'expo-linking';
 import * as ImagePicker from 'expo-image-picker';
+import { recognizeText } from 'expo-text-recognition';
 
 import { API_URL } from '@/constants/api';
 import { AuthContext } from '@/context/AuthContext';
@@ -136,6 +137,48 @@ export default function AddFoodScreen() {
       }
     } catch (err) {
       Alert.alert('Error', 'Failed to open camera for visual search.');
+    }
+  };
+
+  const openOCRScanner = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setLoadingAutoFill(true);
+        const { text } = await recognizeText(result.assets[0].uri);
+        console.log('OCR Result:', text);
+
+        const findValue = (keywords: string[]) => {
+          for (const keyword of keywords) {
+            const regex = new RegExp(`${keyword}\\s*[:\\-]?\\s*(\\d+\\.?\\d*)`, 'i');
+            const match = text.match(regex);
+            if (match) return Math.round(parseFloat(match[1]));
+          }
+          return null;
+        };
+
+        const calories = findValue(['calories', 'kcal', 'energy']);
+        const protein = findValue(['protein']);
+        const carbs = findValue(['carbs', 'carbohydrate']);
+        const fat = findValue(['fat', 'total fat']);
+
+        if (calories !== null) setNewFoodCalories(String(calories));
+        if (protein !== null) setNewFoodProtein(String(protein));
+        if (carbs !== null) setNewFoodCarbs(String(carbs));
+        if (fat !== null) setNewFoodFat(String(fat));
+
+        Alert.alert('OCR Complete', 'Updated values based on labels seen.');
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert('Error', 'Failed to read text from labels.');
+    } finally {
+      setLoadingAutoFill(false);
     }
   };
 
@@ -296,8 +339,11 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666', marginRight: 5}]} onPress={openScanner}>
             <Text style={styles.searchButtonText}>Scan</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4'}]} onPress={openVisualSearch}>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
             <Text style={styles.searchButtonText}>Visual</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#6f42c1'}]} onPress={openOCRScanner}>
+            <Text style={styles.searchButtonText}>OCR</Text>
           </TouchableOpacity>
         </View>
         <TextInput style={styles.input} placeholder="Calories" value={newFoodCalories} onChangeText={setNewFoodCalories} keyboardType="numeric" />

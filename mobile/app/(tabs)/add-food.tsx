@@ -135,13 +135,38 @@ export default function AddFoodScreen() {
   };
 
   const openGoogleLens = async () => {
+    try {
+      // Direct intent for Google Lens on Android
+      const lensIntent = 'intent://#Intent;scheme=googleapp;package=com.google.android.googlequicksearchbox;action=com.google.android.googlequicksearchbox.GOOGLE_LENS;end';
+      const canOpen = await Linking.canOpenURL(lensIntent);
+      
+      if (canOpen) {
+        await Linking.openURL(lensIntent);
+      } else {
+        // Fallback to Google App search or web
+        const googleAppUrl = 'googleapp://';
+        const canOpenGoogle = await Linking.canOpenURL(googleAppUrl);
+        if (canOpenGoogle) {
+          await Linking.openURL(googleAppUrl);
+        } else {
+          await Linking.openURL('https://lens.google.com/');
+        }
+      }
+    } catch (err) {
+      console.error('Error opening Google Lens:', err);
+      // Final fallback to web
+      Linking.openURL('https://lens.google.com/');
+    }
+  };
+
+  const openAIScanner = async () => {
     if (!permission) {
         return;
     }
     if (!permission.granted) {
       const { granted } = await requestPermission();
       if (!granted) {
-        Alert.alert('Permission needed', 'Camera permission is required for Google Lens search.');
+        Alert.alert('Permission needed', 'Camera permission is required for AI scanner.');
         return;
       }
     }
@@ -430,11 +455,11 @@ export default function AddFoodScreen() {
               }}
             />
             <View style={styles.scannerOverlay}>
-              <Text style={styles.scannerText}>Point at food and capture for Lens search</Text>
+              <Text style={styles.scannerText}>Point at food and capture for AI Scan</Text>
               
               <View style={styles.captureButtonRow}>
-                <TouchableOpacity style={[styles.captureButton, { borderColor: '#4285F4' }]} onPress={handleCapture} disabled={loadingAutoFill}>
-                  {loadingAutoFill ? <ActivityIndicator color="#4285F4" /> : <View style={[styles.captureInner, { backgroundColor: '#4285F4' }]} />}
+                <TouchableOpacity style={[styles.captureButton, { borderColor: '#28a745' }]} onPress={handleCapture} disabled={loadingAutoFill}>
+                  {loadingAutoFill ? <ActivityIndicator color="#28a745" /> : <View style={[styles.captureInner, { backgroundColor: '#28a745' }]} />}
                 </TouchableOpacity>
               </View>
 
@@ -448,9 +473,12 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openGoogleLens}>
-            <Text style={styles.searchButtonText}>Google Lens</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openGoogleLens}>
+              <Text style={styles.searchButtonText}>Google Lens</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#28a745', marginRight: 5}]} onPress={openAIScanner}>
+              <Text style={styles.searchButtonText}>AI Scan</Text>
+            </TouchableOpacity>
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
             <Text style={styles.searchButtonText}>Visual</Text>
           </TouchableOpacity>

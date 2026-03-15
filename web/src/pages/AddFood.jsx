@@ -350,8 +350,11 @@ const AddFood = () => {
               <button type="button" onClick={handleAutoFill} disabled={loadingAutoFill} style={{ padding: '8px 16px', cursor: 'pointer' }}>
                 {loadingAutoFill ? 'Searching...' : 'Auto-fill'}
               </button>
-              <button type="button" onClick={startCamera} style={{ padding: '8px 16px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+              <button type="button" onClick={() => window.open('https://lens.google.com/', '_blank')} style={{ padding: '8px 16px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                 Google Lens
+              </button>
+              <button type="button" onClick={startCamera} style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                AI Scan
               </button>
               <button 
                 type="button" 
@@ -400,7 +403,7 @@ const AddFood = () => {
               display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' 
             }}>
               <div style={{ background: 'white', padding: '20px', borderRadius: '8px', maxWidth: '90%', width: '500px' }}>
-                <h3 style={{ marginTop: 0, color: '#4285F4' }}>Google Lens Search</h3>
+                <h3 style={{ marginTop: 0, color: '#28a745' }}>AI Food Scanner</h3>
                 <div style={{ position: 'relative', width: '100%', paddingBottom: '75%', background: '#000', marginBottom: '15px', overflow: 'hidden', borderRadius: '4px' }}>
                   <video
                     ref={videoRef}
@@ -411,8 +414,8 @@ const AddFood = () => {
                   <canvas ref={canvasRef} style={{ display: 'none' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button type="button" onClick={captureImage} style={{ flex: 1, padding: '12px', background: '#4285F4', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    Search with Lens
+                  <button type="button" onClick={captureImage} style={{ flex: 1, padding: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Scan & Identify
                   </button>
                   <button type="button" onClick={stopCamera} style={{ flex: 1, padding: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
                     Cancel

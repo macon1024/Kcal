@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { StyleSheet, View, Text, TextInput, Button, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator } from 'react-native';
 import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import axios from 'axios';
 import * as Linking from 'expo-linking';
@@ -30,6 +30,7 @@ export default function AddFoodScreen() {
   const [newFoodBaseAmount, setNewFoodBaseAmount] = useState('100');
   const [newFoodBaseUnit, setNewFoodBaseUnit] = useState('g');
   const [loadingAutoFill, setLoadingAutoFill] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
 
   const { user } = useContext(AuthContext);
   const userId = user?.id;
@@ -47,6 +48,44 @@ export default function AddFoodScreen() {
   useEffect(() => {
     fetchFoods();
   }, []);
+
+  const handleCapture = async () => {
+    if (!cameraRef.current) return;
+    
+    setLoadingAutoFill(true);
+    try {
+      const photo = await cameraRef.current.takePictureAsync({
+        quality: 0.5,
+        base64: true,
+      });
+
+      if (photo && photo.base64) {
+        setShowScanner(false);
+        const res = await axios.post(`${API_URL}/ai/analyze-food`, {
+          imageBase64: photo.base64
+        });
+
+        if (res.data) {
+          const product = res.data;
+          setNewFoodName(product.name || '');
+          setNewFoodCalories(String(product.calories || '0'));
+          setNewFoodProtein(String(product.protein || '0'));
+          setNewFoodCarbs(String(product.carbs || '0'));
+          setNewFoodFat(String(product.fat || '0'));
+          setNewFoodServingSize(product.servingSize || '100g');
+          setNewFoodBaseAmount(String(product.baseAmount || '100'));
+          setNewFoodBaseUnit(product.baseUnit || 'g');
+          Alert.alert('AI Success', `Identified as: ${product.name}`);
+        }
+      }
+    } catch (err: any) {
+      console.log('Capture Error:', err);
+      const errorMessage = err.response?.data?.error || 'Failed to analyze photo with AI.';
+      Alert.alert('AI Error', errorMessage);
+    } finally {
+      setLoadingAutoFill(false);
+    }
+  };
 
   const handleBarCodeScanned = async ({ type, data }: { type: string, data: string }) => {
     setScanned(true);
@@ -95,15 +134,14 @@ export default function AddFoodScreen() {
     }
   };
 
-  const openScanner = async () => {
+  const openCameraAI = async () => {
     if (!permission) {
-        // Permissions are still loading
         return;
     }
     if (!permission.granted) {
       const { granted } = await requestPermission();
       if (!granted) {
-        Alert.alert('Permission needed', 'Camera permission is required to scan barcodes.');
+        Alert.alert('Permission needed', 'Camera permission is required for AI search.');
         return;
       }
     }
@@ -383,6 +421,7 @@ export default function AddFoodScreen() {
         <Modal visible={showScanner} animationType="slide">
           <View style={styles.scannerContainer}>
             <CameraView 
+              ref={cameraRef}
               style={StyleSheet.absoluteFillObject}
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               barcodeScannerSettings={{
@@ -390,7 +429,14 @@ export default function AddFoodScreen() {
               }}
             />
             <View style={styles.scannerOverlay}>
-              <Text style={styles.scannerText}>Scan a food barcode</Text>
+              <Text style={styles.scannerText}>Point at food and capture for AI search</Text>
+              
+              <View style={styles.captureButtonRow}>
+                <TouchableOpacity style={styles.captureButton} onPress={handleCapture} disabled={loadingAutoFill}>
+                  {loadingAutoFill ? <ActivityIndicator color="#fff" /> : <View style={styles.captureInner} />}
+                </TouchableOpacity>
+              </View>
+
               <Button title="Cancel" onPress={() => setShowScanner(false)} color="red" />
             </View>
           </View>
@@ -401,8 +447,8 @@ export default function AddFoodScreen() {
           <TouchableOpacity style={[styles.searchButton, {marginRight: 5}]} onPress={handleAutoFill} disabled={loadingAutoFill}>
             <Text style={styles.searchButtonText}>{loadingAutoFill ? '...' : 'Auto'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666', marginRight: 5}]} onPress={openScanner}>
-            <Text style={styles.searchButtonText}>Scan</Text>
+          <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#666', marginRight: 5}]} onPress={openCameraAI}>
+            <Text style={styles.searchButtonText}>Camera AI</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.searchButton, {backgroundColor: '#4285F4', marginRight: 5}]} onPress={openVisualSearch}>
             <Text style={styles.searchButtonText}>Visual</Text>

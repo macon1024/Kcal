@@ -15,6 +15,9 @@ const AddFood = () => {
   const [ocrLoading, setOcrLoading] = useState(false);
   const fileInputRef = useRef(null);
   const aiInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [cameraStream, setCameraStream] = useState(null);
 
   const { user } = useContext(AuthContext);
   const userId = user?.id; // Use logged in user ID
@@ -31,6 +34,71 @@ const AddFood = () => {
       setFoods(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowScanner(true);
+    } catch (err) {
+      console.error('Camera access error:', err);
+      alert('Could not access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowScanner(false);
+  };
+
+  const captureImage = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const base64String = canvas.toDataURL('image/jpeg').split(',')[1];
+    setLoadingAutoFill(true);
+    stopCamera();
+
+    try {
+      const res = await axios.post(`${API_URL}/ai/analyze-food`, {
+        imageBase64: base64String
+      });
+
+      if (res.data) {
+        const product = res.data;
+        setNewFood({
+          ...newFood,
+          name: product.name || newFood.name,
+          calories: Math.round(product.calories || 0),
+          protein: Math.round(product.protein || 0),
+          carbs: Math.round(product.carbs || 0),
+          fat: Math.round(product.fat || 0),
+          servingSize: product.servingSize || '100g',
+          baseAmount: 100,
+          baseUnit: 'g'
+        });
+        alert(`AI Identified: ${product.name}`);
+      }
+    } catch (apiErr) {
+      console.error('AI API Error:', apiErr);
+      const errorMsg = apiErr.response?.data?.error || 'Failed to analyze with AI.';
+      alert(errorMsg);
+    } finally {
+      setLoadingAutoFill(false);
     }
   };
 
@@ -268,8 +336,8 @@ const AddFood = () => {
               <button type="button" onClick={handleAutoFill} disabled={loadingAutoFill} style={{ padding: '8px 16px', cursor: 'pointer' }}>
                 {loadingAutoFill ? 'Searching...' : 'Auto-fill'}
               </button>
-              <button type="button" onClick={() => setShowScanner(true)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                Scan
+              <button type="button" onClick={startCamera} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                Camera AI
               </button>
               <button 
                 type="button" 
@@ -299,7 +367,7 @@ const AddFood = () => {
                 style={{ padding: '8px 16px', background: '#FFD700', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
                 disabled={loadingAutoFill}
               >
-                {loadingAutoFill ? 'Thinking...' : 'AI Search'}
+                {loadingAutoFill ? 'Thinking...' : 'AI Search (File)'}
               </button>
               <input 
                 type="file" 
@@ -317,18 +385,25 @@ const AddFood = () => {
               background: 'rgba(0,0,0,0.8)', zIndex: 1000, 
               display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' 
             }}>
-              <div style={{ background: 'white', padding: '20px', borderRadius: '8px', maxWidth: '90%', width: '400px' }}>
-                <h3 style={{ marginTop: 0 }}>Scan Barcode</h3>
-                <div style={{ width: '100%', height: '300px', background: '#000', marginBottom: '15px' }}>
-                  <BarcodeScannerComponent
-                    width={300}
-                    height={300}
-                    onUpdate={handleScan}
+              <div style={{ background: 'white', padding: '20px', borderRadius: '8px', maxWidth: '90%', width: '500px' }}>
+                <h3 style={{ marginTop: 0 }}>Camera AI Search</h3>
+                <div style={{ position: 'relative', width: '100%', paddingBottom: '75%', background: '#000', marginBottom: '15px', overflow: 'hidden', borderRadius: '4px' }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                   />
+                  <canvas ref={canvasRef} style={{ display: 'none' }} />
                 </div>
-                <button type="button" onClick={() => setShowScanner(false)} style={{ width: '100%', padding: '10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  Cancel
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="button" onClick={captureImage} style={{ flex: 1, padding: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Capture & Identify
+                  </button>
+                  <button type="button" onClick={stopCamera} style={{ flex: 1, padding: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           )}

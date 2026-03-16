@@ -29,10 +29,10 @@ router.post('/analyze-food', async (req, res) => {
         console.log('GEMINI_API_KEY is present (length: ' + process.env.GEMINI_API_KEY.length + ')');
     }
 
-    // Using gemini-2.5-flash-native-audio for high-performance native audio/dialog capabilities
-    // This model is optimized for low-latency and higher quota headroom
+    // Reverting to gemini-1.5-flash for maximum compatibility and reliability
+    // gemini-2.5-flash-native-audio is not yet supported for generateContent in all regions
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.5-flash-native-audio",
+      model: "gemini-1.5-flash",
       generationConfig: { responseMimeType: "application/json" }
     }, { apiVersion: 'v1beta' });
 

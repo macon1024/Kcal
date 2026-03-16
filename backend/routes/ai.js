@@ -29,11 +29,10 @@ router.post('/analyze-food', async (req, res) => {
         console.log('GEMINI_API_KEY is present (length: ' + process.env.GEMINI_API_KEY.length + ')');
     }
 
-    // Initialize the model with specific configuration if needed
-    // Using gemini-1.5-flash for faster and cheaper analysis results
-    // Use v1beta explicitly for flash models to avoid 404
+    // Using gemini-3.1-pro-preview for the most advanced free-tier reasoning
+    // Use v1beta explicitly for newer models to avoid 404
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-3.1-pro-preview",
       generationConfig: { responseMimeType: "application/json" }
     }, { apiVersion: 'v1beta' });
 
